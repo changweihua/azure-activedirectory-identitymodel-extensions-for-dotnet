@@ -28,6 +28,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -148,6 +149,81 @@ namespace System.IdentityModel.Tokens.Jwt
             RawSignature = string.Empty;
         }
 
+        // Create JWE
+        public JwtSecurityToken(JwtHeader header, string plainText)
+        {
+            if (header == null)
+                throw LogHelper.LogArgumentNullException("header");
+
+            // Log exception if header is not JWEHeader
+            //if (!header.IsJWEHeader)
+            //    throw LogHelper.LogArgumentException<>
+            
+            // ??? TODO: Determine the Key Management Mode employed by the algorithm 
+            KeyManagementModes mode = GetKeyManagementMode(header.Alg);
+            if (mode == KeyManagementModes.KeyWrapping || mode == KeyManagementModes.KeyEncryption || mode == KeyManagementModes.KeyAgreementWithKeyWrapping)
+            {
+                // ??? TODO: When Key Wrapping, Key Encryption, or Key Agreement with Key Wrapping are employed, generate a random CEK value. 
+                // this.CEK = xxxx
+            }
+
+            if (mode == KeyManagementModes.DirectKeyAgreement || mode == KeyManagementModes.KeyAgreementWithKeyWrapping)
+            {
+                // ??? TODO : use the key agreement algorithm to compute the value of the agreed upon key
+                if (mode == KeyManagementModes.DirectKeyAgreement)
+                {
+                    // ??? TODO: let the CEK be the agreed upon key
+                }
+                else
+                {
+                    // ??? TODO: the agreed upon key will be used to wrapthe CEK.
+                }
+            }
+
+            if (mode == KeyManagementModes.KeyWrapping || mode == KeyManagementModes.KeyEncryption || mode == KeyManagementModes.KeyAgreementWithKeyWrapping)
+            {
+                // ?? encrypt the CEK to the recipient and let the result be the JWE Encrypted Key.
+                // this.EncryptedKey = xxxx
+            }
+
+            if (mode == KeyManagementModes.DirectEncryption || mode == KeyManagementModes.DirectKeyAgreement)
+            {
+                this.EncryptedKey = new byte[0];
+            }
+
+            // ??? When Direct Encryption is employed, let the CEK be the shared symmetric key.
+            //string encodedEncryptedKey = Base64UrlEncoder.Encode(this.EncryptedKey);
+
+            // if (enc need iv then generate random JWE iv), else set iv to empty octet sequence
+            // ??? how to determine keySize?
+            this.InitializationVector = GenerateInitializationVector(128);
+          //  string encodedIV = Base64UrlEncoder.Encode(this.InitializationVector);
+
+            // ??? do we need support 'zip' parameter
+
+            // encrypt, create ciphertext and Authentication Tag
+        }
+
+        public JwtSecurityToken(JwtHeader header, byte[] encryptedKey, byte[] iv, byte[] cipherText, byte[] authenticationTag)
+        {
+            // Todo: check parameters...
+            if (header == null)
+                throw LogHelper.LogArgumentNullException("header");
+
+            if (encryptedKey == null)
+                throw LogHelper.LogArgumentNullException("encryptedKey");
+
+            // Log exception if header is not JWEHeader
+            //if (!header.IsJWEHeader)
+            //    throw LogHelper.LogArgumentException<>
+
+            Header = header;
+            EncryptedKey = encryptedKey;
+            InitializationVector = iv;
+            Ciphertext = cipherText;
+            AuthenticationTag = authenticationTag;
+        }
+
         /// <summary>
         /// Gets the 'value' of the 'actor' claim { actort, 'value' }.
         /// </summary>
@@ -214,7 +290,10 @@ namespace System.IdentityModel.Tokens.Jwt
             get { return Payload.Iss; }
         }
 
-        public bool IsJwe { get; set; }
+        public bool IsJwe
+        {
+            get { return Header.IsJWEHeader; }
+        }
 
         /// <summary>
         /// Gets the <see cref="JwtPayload"/> associated with this instance.
@@ -307,6 +386,42 @@ namespace System.IdentityModel.Tokens.Jwt
             get { return Payload.ValidTo; }
         }
 
+        #region JWE properties
+
+        /// <summary>
+        /// Gets or sets the encryption key used for encrypting Content Encryption Key.
+        /// </summary>
+        public SecurityKey EncryptionKey { get; set; }
+
+        public byte[] CEK { get; set; }
+
+        // The encrypted CEK with encryptionKey using 'alg' algorithm in header.
+        public byte[] EncryptedKey { get; set; }
+
+        public string EncodedEncryptedKey
+        {
+            get { return Base64UrlEncoder.Encode(this.EncryptedKey); }
+        }
+
+        public byte[] InitializationVector { get; set; }
+
+        public string EncodeIV
+        {
+            get { return Base64UrlEncoder.Encode(this.InitializationVector); }
+        }
+
+        // Additional Autheniticated Data : ASCII(BASE64URL(UTF8(JWE Protected Header)))
+        public byte[] AAD
+        {
+            get { return Encoding.ASCII.GetBytes(this.EncodedHeader); }
+        }
+
+        public byte[] Ciphertext { get; set; }
+
+        public byte[] AuthenticationTag { get; set; }
+
+        #endregion JWE properties
+
         /// <summary>
         /// Serializes the <see cref="JwtHeader"/> and <see cref="JwtPayload"/>
         /// </summary>
@@ -314,6 +429,20 @@ namespace System.IdentityModel.Tokens.Jwt
         public override string ToString()
         {
             return Header.SerializeToJson() + "." + Payload.SerializeToJson();
+        }
+
+        public KeyManagementModes GetKeyManagementMode(string keyEncryptingAlg)
+        {
+            // TODO: Determine the Key Management Mode employed by the algorithm used
+            // to determine the Content Encryption Key value.  (This is the algorithm recorded in the "alg"(algorithm) Header Parameter of the resulting JWE.)
+            return KeyManagementModes.DirectEncryption;
+        }
+
+        public byte[] GenerateInitializationVector(int keySize)
+        {
+            byte[] iv = new byte[keySize];
+            // generate iv;
+            return iv;
         }
 
         /// <summary>

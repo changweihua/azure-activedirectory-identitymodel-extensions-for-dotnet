@@ -62,9 +62,9 @@ namespace Microsoft.IdentityModel.Tokens
         
         public string Algorithm { get; private set; }
 
-        public abstract string[] Encrypt(byte[] input);
+        public abstract byte[] Encrypt(byte[] input);
 
-        public abstract string Decrypt(string AutheticationTag);
+        public abstract byte[] Decrypt(byte[] input);
 
         #region IDisposable Members
 

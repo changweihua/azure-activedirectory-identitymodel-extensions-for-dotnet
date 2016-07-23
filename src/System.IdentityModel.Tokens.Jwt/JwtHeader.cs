@@ -41,9 +41,16 @@ namespace System.IdentityModel.Tokens.Jwt
         /// <summary>
         /// Initializes a new instance of the <see cref="JwtHeader"/> class. Default string comparer <see cref="StringComparer.Ordinal"/>.
         /// </summary>
-        public JwtHeader()
-            : this(null, null)
+        public JwtHeader(bool createJWEHeader = false)
         {
+            if (createJWEHeader)
+            {
+                new JwtHeader((EncryptionCredentials)null);
+            }
+            else
+            {
+                new JwtHeader(null, null);
+            }
         }
 
         /// <summary>
@@ -88,6 +95,35 @@ namespace System.IdentityModel.Tokens.Jwt
             this[JwtHeaderParameterNames.Typ] = JwtConstants.HeaderType;
             SigningCredentials = signingCredentials;
         }
+        
+        public JwtHeader(EncryptionCredentials encryptionCredentials)
+            : base(StringComparer.Ordinal)
+        {
+            if (encryptionCredentials == null)
+            {
+                this[JwtHeaderParameterNames.Alg] = SecurityAlgorithms.None;
+                this[JwtHeaderParameterNames.Enc] = SecurityAlgorithms.None;
+            }
+            else
+            {
+                this[JwtHeaderParameterNames.Alg] = encryptionCredentials.KeyEncryptionAlgorithm;
+                this[JwtHeaderParameterNames.Enc] = encryptionCredentials.ContentEncryptionAlgorithm;
+
+                if (!string.IsNullOrEmpty(encryptionCredentials.Key.KeyId))
+                    this[JwtHeaderParameterNames.Kid] = encryptionCredentials.Key.KeyId;
+            }
+
+            this[JwtHeaderParameterNames.Typ] = JwtConstants.HeaderType;
+            EncryptionCredentials = encryptionCredentials;
+        }
+
+        public bool IsJWEHeader
+        {
+            get
+            {
+                return Enc != null;
+            }
+        }
 
         /// <summary>
         /// Gets the signature algorithm that was used to create the signature.
@@ -101,11 +137,24 @@ namespace System.IdentityModel.Tokens.Jwt
             }
         }
 
+        public string Enc
+        {
+            get
+            {
+                return this.GetStandardClaim(JwtHeaderParameterNames.Enc);
+            }
+        }
+
         /// <summary>
         /// Gets the <see cref="SigningCredentials"/> passed in the constructor.
         /// </summary>
         /// <remarks>This value may be null.</remarks>
         public SigningCredentials SigningCredentials
+        {
+            get; private set;
+        }
+
+        public EncryptionCredentials EncryptionCredentials
         {
             get; private set;
         }

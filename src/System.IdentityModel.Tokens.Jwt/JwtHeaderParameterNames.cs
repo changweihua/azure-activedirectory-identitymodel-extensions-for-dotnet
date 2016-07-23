@@ -38,6 +38,11 @@ namespace System.IdentityModel.Tokens.Jwt
         public const string Alg = "alg";
 
         /// <summary>
+        /// see:https://tools.ietf.org/html/rfc7516#section-4.1.2
+        /// </summary>
+        public const string Enc = "enc";
+
+        /// <summary>
         /// see:http://tools.ietf.org/html/rfc7519#section-5
         /// </summary>
         public const string Cty = "cty";

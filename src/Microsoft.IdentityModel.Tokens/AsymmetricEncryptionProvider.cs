@@ -38,9 +38,10 @@ namespace Microsoft.IdentityModel.Tokens
         public AsymmetricEncryptionProvider(SecurityKey key, string algorithm, byte[] iv)
             : base(key, algorithm, iv)
         {
+            _rsaCryptoServiceProvider = new RSACryptoServiceProvider();
         }
 
-        public override string[] Encrypt(byte[] input)
+        public override byte[] Encrypt(byte[] input)
         {
             if (input == null)
                 throw LogHelper.LogArgumentNullException("plaintext");
@@ -51,10 +52,14 @@ namespace Microsoft.IdentityModel.Tokens
             if (_disposed)
                 throw LogHelper.LogException<ObjectDisposedException>(GetType().ToString());
 
-            if (_rsaCryptoServiceProvider != null)
+         //   if (_rsaCryptoServiceProvider != null)
                 return _rsaCryptoServiceProvider.Encrypt(input, true);
         }
 
+        public override byte[] Decrypt(byte[] input)
+        {
+            return _rsaCryptoServiceProvider.Decrypt(input, true);
+        }
 
         protected override void Dispose(bool disposing)
         {
