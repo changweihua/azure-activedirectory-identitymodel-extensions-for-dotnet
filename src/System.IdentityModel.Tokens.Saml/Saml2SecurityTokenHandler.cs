@@ -293,7 +293,8 @@ namespace System.IdentityModel.Tokens.Saml2
                 {
                     if (!validationParameters.LifetimeValidator(notBefore: notBefore, expires: expires, securityToken: samlToken, validationParameters: validationParameters))
                     {
-                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidLifetimeException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10230, securityToken)));
+                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidLifetimeException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10230, securityToken))
+                        { NotBefore = notBefore, Expires = expires });
                     }
                 }
                 else
@@ -331,7 +332,8 @@ namespace System.IdentityModel.Tokens.Saml2
                 {
                     if (!validationParameters.AudienceValidator(audiences, samlToken, validationParameters))
                     {
-                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidAudienceException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10231, securityToken)));
+                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidAudienceException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10231, securityToken))
+                            { InvalidAudience = String.Join(", ", audiences) });
                     }
                 }
                 else

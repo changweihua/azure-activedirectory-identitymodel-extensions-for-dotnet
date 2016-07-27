@@ -582,7 +582,8 @@ namespace System.IdentityModel.Tokens.Jwt
                 if (validationParameters.IssuerSigningKeyValidator != null)
                 {
                     if (!validationParameters.IssuerSigningKeyValidator(jwt.SigningKey, jwt, validationParameters))
-                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidSigningKeyException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10232, jwt.SigningKey)));
+                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidSigningKeyException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10232, jwt.SigningKey))
+                            { SigningKey = jwt.SigningKey });
                 }
                 else
                 {
@@ -607,7 +608,8 @@ namespace System.IdentityModel.Tokens.Jwt
                 if (validationParameters.LifetimeValidator != null)
                 {
                     if (!validationParameters.LifetimeValidator(notBefore: notBefore, expires: expires, securityToken: jwt, validationParameters: validationParameters))
-                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidLifetimeException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10230, jwt)));
+                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidLifetimeException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10230, jwt))
+                        { NotBefore = notBefore, Expires = expires });
                 }
                 else
                 {
@@ -620,7 +622,8 @@ namespace System.IdentityModel.Tokens.Jwt
                 if (validationParameters.AudienceValidator != null)
                 {
                     if (!validationParameters.AudienceValidator(jwt.Audiences, jwt, validationParameters))
-                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidAudienceException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10231, jwt.ToString())));
+                        throw LogHelper.LogExceptionMessage(new SecurityTokenInvalidAudienceException(String.Format(CultureInfo.InvariantCulture, LogMessages.IDX10231, jwt.ToString()))
+                            { InvalidAudience = String.Join(", ", jwt.Audiences)});
                 }
                 else
                 {
