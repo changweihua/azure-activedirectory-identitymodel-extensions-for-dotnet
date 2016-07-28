@@ -59,7 +59,7 @@ namespace Microsoft.IdentityModel.Logging
             catch (Exception ex)
             {
                 LogHelper.LogExceptionMessage(new InvalidOperationException(LogMessages.MIML11001, ex));
-                throw ex;
+                throw;
             }
         }
 
